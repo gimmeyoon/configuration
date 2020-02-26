@@ -1,3 +1,7 @@
+>
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; author: Jooho Yoon
+;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; server-client
@@ -17,21 +21,10 @@
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
 (package-initialize)
-(setq-default package-list '(auto-complete
-                             dash
-                             elpy
-                             epl
-                             fill-column-indicator
-                             helm
-                             highlight-symbol
-                             monokai-theme
-                             neotree
-                             popup
-                             powerline
-                             ))
+(setq-default package-list '(auto-complete elpy epl fill-column-indicator helm highlight-symbol monokai-theme neotree))
 (dolist (package package-list)
-(unless (package-installed-p package)
-  (package-install package)))
+  (unless (package-installed-p package)
+    (package-install package)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -52,7 +45,7 @@
 (setq-default coding-system-for-read 'utf-8)
 (setq-default coding-system-for-write 'utf-8)
 (setq-default column-number-mode t)
-(setq-default c-default-style "linux")
+(setq-default c-default-style "java")
 (setq-default c-basic-offset 4)
 (setq-default default-tab-width 4)
 (setq-default fill-column 80)
@@ -61,6 +54,9 @@
 (setq-default make-backup-files nil)
 (setq-default scroll-step 1)
 (setq-default standard-indent 4)
+(setq-default package-check-signature nil)
+(setq elpy-rpc-python-command "python3")
+(setq js-indent-level 2)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; user-defined function
@@ -92,11 +88,6 @@
 (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.cc\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.cpp\\'". c++-mode))
-(add-to-list 'load-path "~/.emacs.d/elpa/popup-0.5.3")
-(add-to-list 'load-path "~/.emacs.d/elpa/auto-complete-1.5.1")
-(add-to-list 'load-path "~/.emacs.d/elpa/highlight-symbol-1.3")
-(add-to-list 'load-path "~/.emacs.d/elpa/fill-column-indicator-1.87")
-(add-to-list 'load-path "~/.emacs.d/elpa/elpy-1.14.1")
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; package-specific
@@ -137,8 +128,8 @@
 (helm-mode 1)
 
 ;; auto-complete
-;; (require 'auto-complete-config)
-;; (ac-config-default)
+(require 'auto-complete-config)
+(ac-config-default)
 
 ;; highlight-symbol
 (require 'highlight-symbol)
@@ -152,9 +143,26 @@
 (require 'neotree)
 (global-set-key [f1] 'neotree-toggle)
 
-;; powerline
-(require 'powerline)
-(powerline-default-theme)
-
 ;; theme
 (load-theme 'monokai t)
+
+;; python
+(when (load "flymake" t)
+  (defun flymake-pylint-init ()
+    (let* ((temp-file (flymake-init-create-temp-buffer-copy
+                       'flymake-create-temp-inplace))
+           (local-file (file-relative-name
+                        temp-file
+                        (file-name-directory buffer-file-name))))
+      (list "epylint" (list local-file))))
+  (add-to-list 'flymake-allowed-file-name-masks
+               '("\\.py\\'" flymake-pylint-init)))
+(add-hook 'python-mode-hook '(lambda () (flymake-mode)))
+
+;; golang
+(add-hook 'go-mode-hook
+          (lambda ()
+            (setq indent-tabs-mode 1)
+            (setq tab-width 4)))
+(setq gofmt-command "goimports")
+(add-hook 'before-save-hook 'gofmt-before-save)
